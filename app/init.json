@@ -1,0 +1,68 @@
+{
+    "users": [
+        {
+            "email": "andrew@clarkson.mn",
+            "organization": "target",
+            "name": "Andrew Clarkson",
+            "password": "$2a$12$4/3/BV8VgaJSrKIUIZTe5eN9/ELPBNXQBl0XokaeK7MMojglqCLyS",
+            "role": "user",
+            "badges": [
+                {
+                    "slug": "gym",
+                    "steps": [
+                        {
+                            "slug": "membership",
+                            "status": "completed"
+                        },
+                        {
+                            "slug": "visits",
+                            "status": "in-progress",
+                            "value": 9
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "email": "jane.olson@target.com",
+            "organization": "target",
+            "name": "Jane Olson",
+            "password": "$2a$12$4/3/BV8VgaJSrKIUIZTe5eN9/ELPBNXQBl0XokaeK7MMojglqCLyS",
+            "role": "manager"
+        }
+    ],
+    "organizations": [
+        {
+            "name": "Target",
+            "slug": "target",
+            "badges": [
+                "gym"
+            ]
+        }
+    ],
+    "badges": [ 
+        {
+            "organization": "target", 
+            "slug": "gym",
+            "locations": [
+                [
+                    44.971176, 
+                    -93.214502
+                ]
+            ],
+            "steps": [
+                {
+                    "slug": "membership",
+                    "description": "Setup Membership",
+                    "type": "manager"
+                },
+                {
+                    "slug": "visits",
+                    "description": "Visit 10 times",
+                    "number": 10,
+                    "type": "checkin"
+                }
+            ]
+        } 
+    ]
+}
