@@ -35,6 +35,31 @@ def init():
         admin = User(**admin)
         admin.roles.append(Role(name='superuser'))
         db.session.add(admin)
+        
+        locust = {
+            "name": "Jane Olson",
+            "email": "jane.olson@target.com",
+            "active": True,
+            "password": user_manager.hash_password("bubbles1!")
+        }
+
+
+        locust = User(**locust)
+        locust.roles.append(Role(name='locust'))
+        db.session.add(locust)
+        
+        user = {
+            "name": "Thad Roberts",
+            "email": "thad.roberts@gmail.com",
+            "active": True,
+            "password": user_manager.hash_password("surfsup")
+        }
+
+
+        user = User(**user)
+        user.roles.append(Role(name='user'))
+        db.session.add(user)
+        
         db.session.commit()
 
 app.before_first_request(init)
