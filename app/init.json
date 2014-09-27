@@ -1,0 +1,23 @@
+{
+    "users": [
+        {
+            "email": "andrew@clarkson.mn",
+            "organization": "Target",
+            "name": "Andrew Clarkson",
+            "password": "$2a$12$4/3/BV8VgaJSrKIUIZTe5eN9/ELPBNXQBl0XokaeK7MMojglqCLyS",
+            "role": "user"
+        },
+        {
+            "email": "jane.olson@target.com",
+            "organization": "Target",
+            "name": "Jane Olson",
+            "password": "$2a$12$4/3/BV8VgaJSrKIUIZTe5eN9/ELPBNXQBl0XokaeK7MMojglqCLyS",
+            "role": "manager"
+        }
+    ],
+    "organizations": [
+        {
+            "name": "Target"
+        }
+    ]
+}
