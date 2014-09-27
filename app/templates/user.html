@@ -14,17 +14,17 @@
         
         {% for badge in badges %}
         <tr>
-            <td><img src="{{badge.image_url}}"/></td>
+            <td><img style="height: 64px; width: 64px" src="{{badge.image_url}}"/></td>
             <td>{{badge.name}}</td>
             <td>{{badge.status}}</td>
             <td>
-                <form method="post" action="{{url_for('manager_grant')}}">
+                <form method="post" action="{{url_for('manage_grant', id=user.id )}}">
                     {{ form.csrf_token }}
                     <input name="email" type="hidden" value="{{ user.email }}"/>
                     <input name="badge" type="hidden" value="{{ badge.id }}"/>
+                    
+                    <button type="submit" class="btn btn-success"><i class="fa fa-magic"></i>Grant</button>
                 </form>
-                <button href="{{url_for('manage_user', id=user.id)}}" class="btn btn-success"><i class="fa fa-pencil"></i>
-                    Edit</button>
             </td>
         </tr>
         {% endfor %}

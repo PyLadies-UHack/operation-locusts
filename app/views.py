@@ -1,7 +1,7 @@
 from flask import g, render_template, redirect, url_for, session, request
 from passlib.hash import bcrypt
 from app import app, db
-from app.forms import LoginForm, LogoutForm, RevokeForm
+from app.forms import LoginForm, LogoutForm, GrantForm, RevokeForm
 import requests
 from requests.auth import HTTPBasicAuth
 from datetime import datetime
@@ -76,7 +76,7 @@ def grant_badge(id, email):
     url = "{base}/organizations/{org}/badges".format(base=base, org=org)
 
     data = {
-        "recipient_email": "andrew@clarkson.mn",
+        "recipient_email": email,
         "badge_template_id": id,
         "issued_at": str(datetime.now()) 
     }
@@ -108,6 +108,8 @@ def checkin(slug):
                     grant_badge(b['id'], g.user['email'])
 
                 db.users.save(g.user)
+
+    
 
     return "", 201
     
@@ -199,13 +201,64 @@ def manage_user(id):
 
     user = db.users.find_one({'id': id, 'organization': org, 'role': 'user'})
 
-
     b = []
     for badge in user['badges']:
-        b.append(db.badges.find_one({'id': badge['id']}))
+        
+        bx = db.badges.find_one({'id': badge['id']})
+        bx['status'] = badge['status']
+        b.append(bx)
+        
 
-    return render_template('user.html', badges=b, user=user)
+    form = GrantForm(meta={'csrf_context': session})
+
+    return render_template('user.html', badges=b, form=form, user=user)
     
+
+@login_required
+@app.route("/manage/users/<id>/grant", methods=['POST'])
+def manage_grant(id):
+    
+    api_key = 'gZZDY3UwGe9oojWX19qx'
+    base = 'https://sandbox.youracclaim.com/api/v1'
+    org = 'ac7e8f74-5e79-411a-b5b9-d0ee0384f42c'
+    
+    url = "{base}/organizations/{org}/badges".format(base=base, org=org)
+
+
+
+    form = GrantForm(request.form, meta={'csrf_context': session})
+
+    if form.validate():
+    
+        data = {
+            "recipient_email": form.email.data,
+            "badge_template_id": form.badge.data,
+            "issued_at": str(datetime.now()) 
+        }
+        
+        url = "{base}/organizations/{org}/badges".format(base=base, org=org)
+    
+        r = requests.post(url, data=data, auth=HTTPBasicAuth(api_key, ''))
+       
+
+        if r.status_code == 201:
+            
+            user = db.users.find_one({"id": id})
+           
+
+            b = []
+            for badge in user['badges']:
+                if badge['id'] == form.badge.data:
+                    badge['status'] = 'completed'
+
+                b.append(badge)
+            user['badges'] = b
+            
+            db.users.save(user)
+
+
+    return redirect(url_for('manage_user', id=id))
+
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():

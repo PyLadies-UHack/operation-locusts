@@ -1,4 +1,10 @@
 {% extends 'layout.html' %}
 {% block content %}
-    <h1>Hello World</h1>
+    <div class="jumbotron">
+        <img class="center-block" src="/static/img/logo.png">
+        <p></p>
+        <a class="btn btn-lg btn-primary" href="{{url_for('login')}}">
+            Login
+        </a>
+    </div>
 {% endblock %}

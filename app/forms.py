@@ -20,3 +20,6 @@ class LogoutForm(SecureForm):
 class RevokeForm(SecureForm):
     id = StringField('Id')
 
+class GrantForm(SecureForm):
+    email = StringField('Email')
+    badge = StringField('Badge')

@@ -17,6 +17,8 @@
         </thead>
         
         {% for entry in data %}
+        {% if entry.state == 'revoked' %}
+        {% else %}
         <tr>
             <td><img style="width: 64px; height: 64px;" class="media-object" src="{{entry.image_url}}"/></td>
             <td>{{entry.badge_template.name}}</td>
@@ -32,6 +34,7 @@
                 </form>
             </td>
         </tr>
+        {% endif %}
         {% endfor %}
     </table>
 
