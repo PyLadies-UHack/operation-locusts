@@ -32,7 +32,7 @@
                       </a></li>
                 <li class="divider"></li>
                 <li>
-                    <form>
+                    <form action="{{ url_for('logout') }}" method="POST">
                         {{g.logout.csrf_token}}
                         <button class="center-block btn btn-danger" type="submit">
                             <i class="fa fa-sign-out"></i>

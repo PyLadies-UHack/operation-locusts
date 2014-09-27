@@ -1,11 +1,12 @@
 from flask import g, render_template, redirect, url_for, session, request
 from passlib.hash import bcrypt
 from app import app, db
-from app.forms import LoginForm, LogoutForm
+from app.forms import LoginForm, LogoutForm, RevokeForm
 import requests
 from requests.auth import HTTPBasicAuth
 from datetime import datetime
 from functools import wraps
+import json
 
 @app.before_request
 def user():
@@ -125,6 +126,87 @@ def profile():
 
     return render_template('profile.html')
 
+@login_required
+@app.route("/manage", methods=['GET'])
+def manage():
+   
+    sort = request.args.get('sort', 'date')
+    
+    api_key = 'gZZDY3UwGe9oojWX19qx'
+    base = 'https://sandbox.youracclaim.com/api/v1'
+    org = 'ac7e8f74-5e79-411a-b5b9-d0ee0384f42c'
+
+    url = "{base}/organizations/{org}/badges".format(base=base, org=org)
+
+    order = "issued_at"
+
+    if sort == "badge": 
+        order = "badge_templates[name]"
+    elif sort == "user":
+        order = "user[last_name]" 
+        
+    params = {
+        "sort": order         
+    }
+
+    r = requests.get(url, data=params, auth=HTTPBasicAuth(api_key, ''))
+
+    form = RevokeForm(meta={'csrf_context': session})
+
+    data = []
+    for entry in r.json()['data']:
+        entry['time'] = datetime.strptime(entry['issued_at'][:10], "%Y-%M-%d")
+        data.append(entry)
+
+    return render_template('manage.html', form=form, sort=sort, data=data)
+
+
+@login_required
+@app.route("/manage/revoke", methods=['POST'])
+def revoke():
+    
+    api_key = 'gZZDY3UwGe9oojWX19qx'
+    base = 'https://sandbox.youracclaim.com/api/v1'
+    org = 'ac7e8f74-5e79-411a-b5b9-d0ee0384f42c'
+    
+
+    form = RevokeForm(request.form, meta={'csrf_context': session})
+
+    if form.validate():
+
+        url = "{base}/organizations/{org}/badges/{id}/revoke".format(base=base, org=org, id=form.id.data)
+        
+        r = requests.put(url, data={'reason': 'failure'}, auth=HTTPBasicAuth(api_key, ''))
+
+        if r.status_code == 200: 
+            return redirect(url_for('manage'))
+    
+    return "", 500
+
+
+@login_required
+@app.route("/manage/users", methods=['GET'])
+def manage_users():
+    org = g.user['organization']
+    users = db.users.find({'organization': org, 'role': 'user'})
+
+    return render_template('users.html', users=users)
+
+@login_required
+@app.route("/manage/users/<id>", methods=['GET'])
+def manage_user(id):   
+    org = g.user['organization']
+
+    user = db.users.find_one({'id': id, 'organization': org, 'role': 'user'})
+
+
+    b = []
+    for badge in user['badges']:
+        b.append(db.badges.find_one({'id': badge['id']}))
+
+    return render_template('user.html', badges=b, user=user)
+    
+
 @app.route("/login", methods=['GET', 'POST'])
 def login():
 
@@ -144,8 +226,11 @@ def login():
         if user and bcrypt.verify(password, user['password'],):
             
             session['email'] = email
-            
-            return redirect(url_for('index'))
+
+            if user['role'] == 'manager':
+                return redirect(url_for('manage'))
+            else:
+                return redirect(url_for('profile'))
         
         else:
             error = "Wrong email password combination"
@@ -160,4 +245,4 @@ def logout():
     if form.validate:
         session.pop('email', None)
 
-    redirect(url_for('index'))
+    return redirect(url_for('index'))

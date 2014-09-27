@@ -1,0 +1,38 @@
+{% extends 'layout.html' %}
+{% block content %}
+
+    <h2>Issued Badges:</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th><a {% if sort == 'badge' %}class="current"{% endif %}
+                        href="?sort=badge">Badge</a></th>
+                <th>Titled</th>
+                <th><a {% if sort == 'user' %}class="current"{% endif %}
+                        href="?sort=user">User</a></th>
+                <th><a {% if sort == 'date' %}class="current"{% endif %}
+                        href="?sort=date">Date</a></th>
+                <th>Revoke</th>
+            </tr>
+        </thead>
+        
+        {% for entry in data %}
+        <tr>
+            <td><img style="width: 64px; height: 64px;" class="media-object" src="{{entry.image_url}}"/></td>
+            <td>{{entry.badge_template.name}}</td>
+            <td>{{entry.issued_to}}</td>
+            <td>{{entry.time.date()}}</td>
+            <td>
+                <form action="url_for('revoke')" method="POST">
+                    {{form.csrf_token}}
+                    <input type="hidden" value="{{entry.id}}"/>
+                    <button class="btn btn-danger" type="submit">
+                        <i class="fa fa-times-circle"></i> Revoke
+                    </button>  
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+{% endblock %}

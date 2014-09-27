@@ -16,3 +16,7 @@ class LoginForm(SecureForm):
 class LogoutForm(SecureForm):
     pass
 
+
+class RevokeForm(SecureForm):
+    id = StringField('Id')
+
