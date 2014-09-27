@@ -20,9 +20,11 @@ def init():
     
     db.drop_collection('users')
     db.drop_collection('organizations')
+    db.drop_collection('badges')
     
     users = db['users']
     orgs = db['organizations']
+    badges = db['badges']
 
     import json
     
@@ -30,8 +32,10 @@ def init():
     
     new_users = obj['users']
     new_orgs = obj['organizations']
+    new_badges = obj['badges']
 
     users.insert(new_users)
+    badges.insert(new_badges)
     orgs.insert(new_orgs)
 
 

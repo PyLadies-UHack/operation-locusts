@@ -17,12 +17,129 @@ def index():
         if not user:
             return "Bad Session"
 
+        logout = LogoutForm(meta={'csrf_context': session})
+
         if user['role'] == 'user':
-            return render_template('user.html')
+
+
+            context = {
+                "name": user['name'],
+                "organization": user['organization'],
+                "badges": user['badges'],
+                "logout": logout
+            }
+
+            return render_template('user.html', **context)
+        
         elif user['role'] == 'manager':
-            return render_template('manager.html')
+            
+            context = {
+                "name": user['name'],
+                "organization": user['organization'],
+                "logout": logout
+            }
+            
+            return render_template('manager.html', **context)
     else:
+
         return render_template('index.html')
+
+@app.route("/badges/<slug>", methods=['GET'])
+def badges(slug):
+    
+    if 'email' in session:
+
+        user = db.users.find_one({'email': session['email']})
+        
+        if not user:
+            return "Bad Session"
+
+        logout = LogoutForm(meta={'csrf_context': session})
+        
+        if user['role'] == 'user':
+
+
+            badge = db.badges.find_one({
+                'organization': user['organization'],
+                'slug': slug
+            })
+
+            if not badge:
+                return "Badge not found", 404
+
+            
+            ubadges = user['badges']
+
+            ubadge = None
+            for b in ubadges:
+                if b['slug'] == slug:
+                    ubadge = b
+                    break
+            
+            if not ubadge:
+                return "You are not working on this badge", 404
+
+            context = {
+                "name": user['name'],
+                "organization": user['organization'],
+                "user_steps": ubadge['steps'],
+                "badge_steps": badge['steps'],
+                "logout": logout
+            }
+
+            return render_template('user_badge.html', **context)
+        
+        elif user['role'] == 'manager':
+            
+            context = {
+                "name": user['name'],
+                "organization": user['organization'],
+                "logout": logout
+            }
+            
+            return render_template('manager_badge.html', **context)
+    
+    else:
+
+        return redirect(url_for('login'))
+
+    
+@app.route("/badges/<slug>/checkin", methods=["POST"])
+def checkin(slug):
+    if 'email' in session:
+
+        user = db.users.find_one({'email': session['email']})
+        
+        if not user:
+            return "Bad Session"
+
+        logout = LogoutForm(meta={'csrf_context': session})
+        
+        if user['role'] == 'user':
+            
+            lat = float(request.form['lat'])
+            lng = float(request.form['lng'])
+
+            
+
+            location = db.badges.find_one({'location': 
+                {"$within": {"$center": [[lat, lng], 1]}}})
+            
+            print(location)
+
+            return "", 200
+
+
+
+        else:
+
+            return "You are not working on this badge", 404
+    
+    else:
+
+        return redirect(url_for('login'))
+    
+
 
 
 @app.route("/login", methods=['GET', 'POST'])
