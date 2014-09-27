@@ -1,0 +1,41 @@
+{% extends 'layout.html' %}
+{% block content %}
+   
+    <div class="row">
+
+        <div class="col-md-5">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    {{ badge.name }}
+                </div>
+                <div class="panel-body">
+                    {% if badge.status == 'completed' %}
+                        <img class="img-responsive center-block" src="{{ badge.image_url }}">
+                    {% else %}
+                        <img class="center-block in-progress img-responsive" src="{{ badge.image_url }}">
+                    {% endif %}
+                </div>
+                <div class="panel-footer">  
+                <div class="progress">
+                    <div class="progress-bar" role="progressbar" aria-valuenow="{{badge.completeness}}" aria-valuemin="0" aria-valuemax="100" style="width: {{badge.completeness}}%;">
+                        <span class="sr-only">{{completeness}}% Complete</span>
+                        {{badge.completeness}}% Completed
+                    </div>
+                </div>
+                </div> 
+            </div>
+        </div>
+        <div class="col-md-7">
+            {% if badge.type == 'checkin' %}
+                <div class="well">
+                    <button id="checkin" class="btn btn-primary btn-block btn-lg disabled"><i class="fa fa-map-marker" style="margin-right:20px"></i>Checkin!</button>
+                </div>
+            {% endif %}
+            <div class="well">
+                {{ badge.description }}
+            </div>
+        </div>
+    
+    </div>
+
+{% endblock %}
