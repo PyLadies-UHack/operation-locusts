@@ -2,7 +2,9 @@ from flask import render_template, redirect, url_for, session, request
 from passlib.hash import bcrypt
 from app import app, db
 from app.forms import LoginForm, LogoutForm
-
+import requests
+from requests.auth import HTTPBasicAuth
+from datetime import datetime
 
 @app.route("/", methods=['GET'])
 def index():
@@ -44,6 +46,7 @@ def index():
 
         return render_template('index.html')
 
+
 @app.route("/badges/<slug>", methods=['GET'])
 def badges(slug):
     
@@ -82,8 +85,8 @@ def badges(slug):
             context = {
                 "name": user['name'],
                 "organization": user['organization'],
-                "user_steps": ubadge['steps'],
-                "badge_steps": badge['steps'],
+                "ubadge": ubadge,
+                "badge": badge,
                 "logout": logout
             }
 
@@ -103,6 +106,23 @@ def badges(slug):
 
         return redirect(url_for('login'))
 
+
+def grant_badge(slug, email):
+
+    api_key = 'gZZDY3UwGe9oojWX19qx'
+    base = 'https://sandbox.youracclaim.com/api/v1'
+    org = 'ac7e8f74-5e79-411a-b5b9-d0ee0384f42c'
+
+    url = "{base}/organizations/{org}/badges".format(base=base, org=org)
+
+    data = {
+        "recipient_email": "andrew@clarkson.mn",
+        "badge_template_id": slug,
+        "issued_at": str(datetime.now()) 
+    }
+
+    request.post(url, data=data, auth=HTTPBasicAuth(self.api_key, ''))
+
     
 @app.route("/badges/<slug>/checkin", methods=["POST"])
 def checkin(slug):
@@ -119,17 +139,30 @@ def checkin(slug):
             
             lat = float(request.form['lat'])
             lng = float(request.form['lng'])
+    
+
+            location = db.badges.find_one({'locations': 
+                {"$geoWithin": {"$center": [[lat, lng], 0.02]}}})
 
             
+            if not location:
+                return "", 500
 
-            location = db.badges.find_one({'location': 
-                {"$within": {"$center": [[lat, lng], 1]}}})
-            
-            print(location)
+            for badge in user['badges']:
+                if badge['slug'] == slug:
+                    if badge['status'] == "in-progress":
+                        badge['value'] += 1
+                        if badge['value'] == badge['goal']:
+                            badge['status'] = "completed"
+
+                            grant_badge(badge['slug'], user['email'])
+
+                        db.users.save(user)
+
+
+
 
             return "", 200
-
-
 
         else:
 

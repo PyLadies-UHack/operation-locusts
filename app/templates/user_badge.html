@@ -404,7 +404,8 @@
                     "lng": position.coords.longitude, 
                     "lat": position.coords.latitude
                 }, function(data, status){
-            if(status == 200) {
+
+            if(status == 'success') {
                 console.log("Hi!!")
                 location.reload();
             } else {
