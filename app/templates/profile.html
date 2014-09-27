@@ -1,0 +1,33 @@
+{% extends 'layout.html' %}
+{% block content %}
+    
+    <div class="row">
+        {% for badge in g.user['badges'] %}
+            <div class="col-sm-3">
+                <a href="{{url_for('badges', slug=badge.slug)}}">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        {{ badge.name }}
+                    </div>
+                    <div class="panel-body">
+                        {% if badge.status == 'completed' %}
+                            <img class="img-responsive" src="{{ badge.image }}">
+                        {% else %}
+                            <img class="in-progress img-responsive" src="{{ badge.image }}">
+                        {% endif %}
+                    </div>
+                    <div class="panel-footer">  
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" aria-valuenow="{{badge.completeness}}" aria-valuemin="0" aria-valuemax="100" style="width: {{badge.completeness}}%;">
+                            <span class="sr-only">{{completeness}}% Complete</span>
+                            {{badge.completeness}}% Completed
+                        </div>
+                    </div>
+                    </div> 
+                </div>
+                </a>
+            </div>
+        {% endfor %}
+    </div>
+
+{% endblock %}

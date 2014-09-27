@@ -1,10 +1,28 @@
-from flask import render_template, redirect, url_for, session, request
+from flask import g, render_template, redirect, url_for, session, request
 from passlib.hash import bcrypt
 from app import app, db
 from app.forms import LoginForm, LogoutForm
 import requests
 from requests.auth import HTTPBasicAuth
 from datetime import datetime
+from functools import wraps
+
+@app.before_request
+def user():
+    if 'email' in session:
+        user = db.users.find_one({'email': session['email']})
+        if user:
+            g.user = user
+            g.logout = LogoutForm(meta={'csrf_context': session})
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if g.user is None:
+            return redirect(url_for('login'))
+        
+        return f(*args, **kwargs)
+    return decorated_function
 
 @app.route("/", methods=['GET'])
 def index():
@@ -12,102 +30,43 @@ def index():
     Renders the home page
     """
 
-    if 'email' in session:
-
-        user = db.users.find_one({'email': session['email']})
-
-        if not user:
-            return "Bad Session"
-
-        logout = LogoutForm(meta={'csrf_context': session})
-
-        if user['role'] == 'user':
+    return render_template('index.html')
 
 
-            context = {
-                "name": user['name'],
-                "organization": user['organization'],
-                "badges": user['badges'],
-                "logout": logout
-            }
-
-            return render_template('user.html', **context)
-        
-        elif user['role'] == 'manager':
-            
-            context = {
-                "name": user['name'],
-                "organization": user['organization'],
-                "logout": logout
-            }
-            
-            return render_template('manager.html', **context)
-    else:
-
-        return render_template('index.html')
-
-
+@login_required
 @app.route("/badges/<slug>", methods=['GET'])
 def badges(slug):
+        
+    badge = db.badges.find_one({
+        'organization': g.user['organization'],
+        'slug': slug
+    })
+
+    if not badge:
+        return "Badge not found", 404
+      
+    b = None
+
+    for ub in g.user['badges']:
+        if badge['id'] == ub['id']:
+            b = badge
+            b['completeness'] = int((ub['value'] / ub['goal']) * 100)
+            b['complete'] = ub['status'] == 'complete'
+            break
+     
+    if not b:
+        return "You are not participating in this badge", 304
+
+    context = {
+        "badge": b,
+    }
+
     
-    if 'email' in session:
-
-        user = db.users.find_one({'email': session['email']})
+    return render_template('badge.html', **context)
         
-        if not user:
-            return "Bad Session"
-
-        logout = LogoutForm(meta={'csrf_context': session})
-        
-        if user['role'] == 'user':
 
 
-            badge = db.badges.find_one({
-                'organization': user['organization'],
-                'slug': slug
-            })
-
-            if not badge:
-                return "Badge not found", 404
-
-            
-            ubadges = user['badges']
-
-            ubadge = None
-            for b in ubadges:
-                if b['slug'] == slug:
-                    ubadge = b
-                    break
-            
-            if not ubadge:
-                return "You are not working on this badge", 404
-
-            context = {
-                "name": user['name'],
-                "organization": user['organization'],
-                "ubadge": ubadge,
-                "badge": badge,
-                "logout": logout
-            }
-
-            return render_template('user_badge.html', **context)
-        
-        elif user['role'] == 'manager':
-            
-            context = {
-                "name": user['name'],
-                "organization": user['organization'],
-                "logout": logout
-            }
-            
-            return render_template('manager_badge.html', **context)
-    
-    else:
-
-        return redirect(url_for('login'))
-
-
-def grant_badge(slug, email):
+def grant_badge(id, email):
 
     api_key = 'gZZDY3UwGe9oojWX19qx'
     base = 'https://sandbox.youracclaim.com/api/v1'
@@ -117,63 +76,54 @@ def grant_badge(slug, email):
 
     data = {
         "recipient_email": "andrew@clarkson.mn",
-        "badge_template_id": slug,
+        "badge_template_id": id,
         "issued_at": str(datetime.now()) 
     }
 
-    request.post(url, data=data, auth=HTTPBasicAuth(self.api_key, ''))
+    requests.post(url, data=data, auth=HTTPBasicAuth(api_key, ''))
 
-    
+@login_required    
 @app.route("/badges/<slug>/checkin", methods=["POST"])
 def checkin(slug):
-    if 'email' in session:
-
-        user = db.users.find_one({'email': session['email']})
-        
-        if not user:
-            return "Bad Session"
-
-        logout = LogoutForm(meta={'csrf_context': session})
-        
-        if user['role'] == 'user':
             
-            lat = float(request.form['lat'])
-            lng = float(request.form['lng'])
-    
+    lat = float(request.form['lat'])
+    lng = float(request.form['lng'])
 
-            location = db.badges.find_one({'locations': 
-                {"$geoWithin": {"$center": [[lat, lng], 0.02]}}})
+
+    badge = db.badges.find_one({'slug': slug, 'locations': 
+        {"$geoWithin": {"$center": [[lat, lng], 0.02]}}})
 
             
-            if not location:
-                return "", 500
+    if not badge:
+        return "", 500
 
-            for badge in user['badges']:
-                if badge['slug'] == slug:
-                    if badge['status'] == "in-progress":
-                        badge['value'] += 1
-                        if badge['value'] == badge['goal']:
-                            badge['status'] = "completed"
+    for b in g.user['badges']:
+        if b['id'] == badge['id']:
+            if b['status'] == "in-progress":
+                b['value'] += 1
+                if b['value'] == b['goal']:
+                    b['status'] = "completed"
 
-                            grant_badge(badge['slug'], user['email'])
+                    grant_badge(b['id'], g.user['email'])
 
-                        db.users.save(user)
+                db.users.save(g.user)
 
-
-
-
-            return "", 200
-
-        else:
-
-            return "You are not working on this badge", 404
+    return "", 201
     
-    else:
+@login_required
+@app.route("/profile", methods=["GET"])
+def profile():
 
-        return redirect(url_for('login'))
-    
+    badges = g.user['badges']
 
+    for badge in badges:
+        b = db.badges.find_one({"id": badge['id']})    
+        badge['name'] = b['name']
+        badge['image'] = b['image_url']
+        badge['slug'] = b['slug']
+        badge['completeness'] = int((badge['value'] / badge['goal']) * 100)
 
+    return render_template('profile.html')
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():

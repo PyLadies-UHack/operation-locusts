@@ -24,10 +24,12 @@
                     "status": "in-progress",
                     "value": 9,
                     "goal": 10
-                }
+                },
                 {
                     "id": "94ca37d6-8347-491f-a5df-1f1d721dc6b6",
-                    "status": "in-progress"
+                    "status": "in-progress",
+                    "value": 0,
+                    "goal": 1
                 }
             ]
         },
@@ -51,7 +53,7 @@
     "badges": [ 
         {
             "id": "5770ab91-1857-4d2f-9110-ded8a8bd2108",
-            "name": "Attended Well-Being Seminar/Workshop",
+            "name": "Well-Being Workshop",
             "image_url": "https://s3.amazonaws.com/acclaim-sandbox-app/badge_templates/images/original/5bc77ba85a8b56e2b14f2b7ae4ecc274e035f0a0.png?1411811217",
             "organization": "target", 
             "slug": "well-being",
@@ -83,7 +85,7 @@
             "id": "94ca37d6-8347-491f-a5df-1f1d721dc6b6",
             "description": "This team member successfully completed the Tobacco Cessation Program!",
             "image_url": "https://s3.amazonaws.com/acclaim-sandbox-app/badge_templates/images/original/595a9830151b2d5662ca11ffa563852a1293dec4.png?1411798045",
-            "name": "Tobacco Cessation Program participant",
+            "name": "Tobacco Cessation Program",
             "organization": "target",
             "slug": "tobacco",
             "type": "manager"           
