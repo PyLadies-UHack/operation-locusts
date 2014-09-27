@@ -1,0 +1,12 @@
+{% extends 'admin/layout.html' %}
+{% block content %}
+    <ul>
+    {% if not users %}
+        <p>No Users Yet</p>
+    {% else %}
+        {% for user in users %}
+            <li>{{user}}</li>
+        {% endfor %}
+    {% endif %}
+    </ul>
+{% endblock %}
