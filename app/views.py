@@ -8,12 +8,10 @@ def index():
     Renders the home page
     """
 
-    print(dir(current_user))
-
     if current_user.is_authenticated():
-        if "user" in current_user.roles:
+        if current_user.has_roles(['user']):
             return render_template('user_index.html')
-        elif "locust" in current_user.roles:
+        elif current_user.has_roles(['locust']):
             return render_template('locust_index.html')
         else:
             return render_template('locust_index.html')

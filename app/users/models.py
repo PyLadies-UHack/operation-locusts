@@ -36,6 +36,7 @@ def init():
         admin.roles.append(Role(name='superuser'))
         db.session.add(admin)
         
+    if not User.query.filter(User.email=='jane.olson@target.com').first():
         locust = {
             "name": "Jane Olson",
             "email": "jane.olson@target.com",
@@ -48,6 +49,7 @@ def init():
         locust.roles.append(Role(name='locust'))
         db.session.add(locust)
         
+    if not User.query.filter(User.email=='thad.roberts@gmail.com').first():
         user = {
             "name": "Thad Roberts",
             "email": "thad.roberts@gmail.com",
@@ -60,6 +62,6 @@ def init():
         user.roles.append(Role(name='user'))
         db.session.add(user)
         
-        db.session.commit()
+    db.session.commit()
 
 app.before_first_request(init)
