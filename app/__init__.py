@@ -13,6 +13,7 @@ app.register_blueprint(users, url_prefix="/users")
 
 db.create_all()
 
+
 @app.route("/")
 def index():
     return "Hello World"

@@ -11,4 +11,6 @@ def index(page=1):
     
     users = User.query.limit(10).all()    
 
+    print(len(users))
+
     return render_template("users/index.html", users=users)
